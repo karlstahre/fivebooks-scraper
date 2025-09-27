@@ -1,20 +1,28 @@
-# Book Scraper
+# FiveBooks.com Book Scraper
 
-A clean, robust Python script to scrape book titles and authors from a webpage where
-books are represented by elements with the class `.book-title.-listbook`.  
-Handles dynamic content (lazy-loading / infinite scroll) using [Playwright](https://playwright.dev/).
+A Python command-line tool to **extract all book titles and authors** from any [FiveBooks.com](https://fivebooks.com/) page.
 
-## Features
+FiveBooks pages often load additional books as you scroll.  
+This scraper uses **Playwright** to render the page fully (including infinite scroll) and outputs a clean CSV with `Title` and `Author` columns.
 
-- Automatically scrolls to load all books on the page.
-- Extracts both `Title` and `Author`, intelligently handling cases where `by` appears in the title.
-- Outputs results to a CSV file.
-- Headless browser mode — no GUI pop-ups.
+---
 
-## Installation
+## ✨ Features
+
+- **Automatic scrolling** until every book is visible  
+- **Smart parsing**: splits `Title` and `Author` even when `"by"` appears in the title  
+- Saves results to a **UTF-8 CSV file**  
+- Runs headless (no browser window required)  
+
+---
+
+## 📦 Requirements
+
+- Python **3.8+**
+- [Playwright](https://playwright.dev/python/)
+
+Install dependencies:
 
 ```bash
-git clone <your-repo-url>
-cd book-scraper
 python3 -m pip install -r requirements.txt
 python3 -m playwright install
