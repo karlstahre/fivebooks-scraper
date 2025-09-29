@@ -19,6 +19,9 @@ The script applies several robustness strategies:
     * Handles multiple authors (comma/and/& separators).
     * Falls back to title-only searches when needed.
     * Attempts a shortened title (before ':' or '-') if initial searches fail.
+    * Handles leading "The " (tries again without it if not found).
+    * Normalises/strips apostrophes for fallback queries.
+    * Tries each listed author individually if primary author fails.
 """
 
 from __future__ import annotations
@@ -58,6 +61,22 @@ def primary_author(author: str) -> str:
     return parts[0].strip()
 
 
+def all_authors(author: str) -> list[str]:
+    """Split an author field into a list of individual authors."""
+    return [a.strip() for a in re.split(r"\s*(?:,| and | & )\s*", author) if a.strip()]
+
+
+def strip_leading_the(title: str) -> str:
+    """Remove a leading 'The ' (case-insensitive) if present."""
+    return title[4:].strip() if title.lower().startswith("the ") else title
+
+
+def normalise_apostrophes(title: str) -> str:
+    """Replace curly quotes with straight and optionally remove them."""
+    t = title.replace("’", "'").replace("‘", "'")
+    return t, t.replace("'", "")
+
+
 # ---------- Open Library Query ------------------------------------------------
 def query_openlibrary(params: dict, return_docs: bool = False):
     """Perform a GET request to the Open Library search API."""
@@ -94,7 +113,32 @@ def fetch_first_year(title: str, author: str, depth: int = 0) -> Optional[int]:
         if any(prim_author in a for a in authors) and d.get("first_publish_year"):
             return d["first_publish_year"]
 
-    # 3. Short title (before colon or dash)
+    # 3. Try without leading "The "
+    if title.lower(). startswith("the "):
+        print("    Fallback: removing leading 'The'")
+        yr = fetch_first_year(strip_leading_the(title), author, depth)
+        if yr:
+            return yr
+
+    # 4. Try with apostrophes normalised/removed
+    if "'" in title or "’" in title or "‘" in title:
+        straight, stripped = normalise_apostrophes(title)
+        for t in (straight, stripped):
+            if t != title:
+                print("    Fallback: apostrophe variant")
+                yr = fetch_first_year(t, author, depth)
+                if yr:
+                    return yr
+    
+    # 5. Trye each author indiviually
+    for a in all_authors(author):
+        norm_a = normalise(a)
+        print(f"    Fallback: trying indiviual author '{a}")
+        doc = query_openlibrary({"title": norm_title, "author": norm_a, "limit": 1})
+        if doc and doc.get("first_publish_year"):
+            return doc["first_publish_year"]
+
+    # 6. Short title (before colon or dash)
     if depth < MAX_RECURSION_DEPTH:
         short_title = re.split(r"[:\-]", title, 1)[0].strip()
         if short_title and short_title.lower() != norm_title:
