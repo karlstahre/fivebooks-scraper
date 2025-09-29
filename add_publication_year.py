@@ -153,10 +153,9 @@ def read_books(path: Path) -> Iterator[tuple[str, str]]:
     with path.open(newline="", encoding="utf-8") as infile:
         reader = csv.DictReader(infile, delimiter="\t")
         for row in reader:
-            title = row.get("Title")
-            author = row.get("Author")
-            if title and author:
-                yield title.strip(), author.strip()
+            title = row.get("Title").strip()
+            author = row.get("Author").strip()
+            yield title, author
 
 
 def write_books(path: Path, rows: list[tuple[str, str, Optional[int]]]) -> None:
