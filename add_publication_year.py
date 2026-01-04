@@ -151,7 +151,7 @@ def fetch_first_year(title: str, author: str, depth: int = 0) -> Optional[int]:
 def read_books(path: Path) -> Iterator[tuple[str, str]]:
     """Yield (title, author) pairs from the input TSV."""
     with path.open(newline="", encoding="utf-8") as infile:
-        reader = csv.DictReader(infile, delimiter="\t")
+        reader = csv.DictReader(infile)
         for row in reader:
             title = row.get("Title").strip()
             author = row.get("Author").strip()
